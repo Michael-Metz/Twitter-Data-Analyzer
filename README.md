@@ -64,4 +64,9 @@ The current concrete implementations are
 * RandomizedSentimentAnalyzer
 * AoacheNLPTweetAnalyzer (in progress)
 
+# TODO
+* look over areas in program where List<> is used and determine correct implementation
+* Add Tweet class heirachy overview to readme
+* move preprossing logic to TweetAnalyzerDriver main method
+
 
