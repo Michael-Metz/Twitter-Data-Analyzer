@@ -1,6 +1,6 @@
 # Twitter sentiment analysis
 
-#TwitterPreProcessor
+## TwitterPreProcessor
 
 This program will read a twitter csv file and output it to "sanitized.csv"
 
@@ -21,7 +21,8 @@ We call a tweet with columns `A-AE` a `Sanitized Tweet` which is represented in 
 |---|---|---|---|---|
 | Sanitized  |  User names count from text |  Web url count from text | Hash tag count from text  | Repeated punctuation count from text  
 |  String | Integer  | Integer  |  Integer |   Integer 
-#TweetAnalyzerDriver
+
+## TweetAnalyzerDriver
 
 * reads a sanitized csv file 
 * lets you choose which TweetSentimentAnalyzer implementation to use
@@ -35,7 +36,7 @@ We call a tweet with columns `A-AI` a `Analyzed Tweet` which is represented in o
 | Analysis author class name | Overall sentiment | Overall positive sentiment percent | Overall negative sentiment percent
 | String| Integer| double| double |
 
-#tweetanalyzers
+## tweetanalyzers
 
 this package holds all the logic for the analysis done on the tweets
 
