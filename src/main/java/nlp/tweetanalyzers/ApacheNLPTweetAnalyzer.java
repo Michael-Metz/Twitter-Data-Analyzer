@@ -1,12 +1,26 @@
 package nlp.tweetanalyzers;
 
+import java.io.*;
+import java.util.LinkedList;
 import java.util.List;
 import nlp.*;
+import opennlp.tools.doccat.*;
+import opennlp.tools.tokenize.Tokenizer;
+import opennlp.tools.tokenize.TokenizerME;
+import opennlp.tools.tokenize.TokenizerModel;
+import opennlp.tools.util.MarkableFileInputStreamFactory;
+import opennlp.tools.util.ObjectStream;
+import opennlp.tools.util.PlainTextByLineStream;
+import opennlp.tools.util.TrainingParameters;
 
-public class ApacheNLPTweetAnalyzer implements OverallSentimentAnalyzer {
+public class ApacheNLPTweetAnalyzer implements OverallSentimentAnalyzer, PercentageSentimentAnalyzer {
 
     private static ApacheNLPTweetAnalyzer apacheNLPTweetAnalyzer = null;
 
+    private DoccatModel doccatmodel;
+    private DocumentCategorizer documentCategorizer;
+    private TokenizerModel tokenizermodel;
+    private Tokenizer tokenizer;
     /**
      * Singleton design pattern
      * @return
@@ -20,8 +34,23 @@ public class ApacheNLPTweetAnalyzer implements OverallSentimentAnalyzer {
     /**
      * Private constructor called by the getInstance.
      */
-    private ApacheNLPTweetAnalyzer(){
+    private ApacheNLPTweetAnalyzer() {
         //do any nlp library set up here
+        //read in the bin model
+        //
+        try {
+            InputStream modelIn = new FileInputStream("/Users/benjaminmussell/IdeaProjects/Twitter-Data-Analyzer/OpenNLP_models/TrainingOutput.bin");
+            doccatmodel = new DoccatModel(modelIn);
+            documentCategorizer= new DocumentCategorizerME(doccatmodel);
+            modelIn = new FileInputStream("/Users/benjaminmussell/IdeaProjects/Twitter-Data-Analyzer/OpenNLP_models/en-token.bin");
+            tokenizermodel= new TokenizerModel(modelIn);
+            tokenizer = new TokenizerME(tokenizermodel);
+
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     /**
@@ -44,7 +73,26 @@ public class ApacheNLPTweetAnalyzer implements OverallSentimentAnalyzer {
      */
     @Override
     public AnalyzedTweet analyzeSanitizedTweetSentiment(SanitizedTweet sanitizedTweet) {
-        return null;
+        AnalyzedTweet analyzedTweet= new AnalyzedTweet(sanitizedTweet);
+
+        String[] tokens= tokenizer.tokenize(analyzedTweet.getText());
+        double[] outcomes=null;
+        outcomes=documentCategorizer.categorize(tokens);
+
+        analyzedTweet.setOverallNegativeSentimentPercent(outcomes[0]);
+        analyzedTweet.setOverallPositiveSentimentPercent(outcomes[1]);
+
+        if(outcomes[0]-outcomes[1]>0.1){
+            analyzedTweet.setOverallSentiment(-1);
+        }
+        else if(outcomes[1]-outcomes[0]>0.1){
+            analyzedTweet.setOverallSentiment(1);
+        }
+        else{
+            analyzedTweet.setOverallSentiment(0);
+        }
+        analyzedTweet.setAnalysisAuthorClassName(getAnalyzerClassName());
+        return analyzedTweet;
     }
 
     /**
@@ -54,7 +102,13 @@ public class ApacheNLPTweetAnalyzer implements OverallSentimentAnalyzer {
      */
     @Override
     public List<AnalyzedTweet> analyzeSanitizedTweetsSentiment(List<SanitizedTweet> sanitizedTweets) {
-        return null;
+        List<AnalyzedTweet> analyzedTweets = new LinkedList<>();
+        for(SanitizedTweet sanitizedTweet : sanitizedTweets){
+            AnalyzedTweet analyzedTweet = analyzeSanitizedTweetSentiment(sanitizedTweet);
+            System.out.println("ananlyzing " + analyzedTweet.getSanitizedText());
+            analyzedTweets.add(analyzedTweet);
+        }
+        return analyzedTweets;
     }
 
     /**
@@ -65,6 +119,8 @@ public class ApacheNLPTweetAnalyzer implements OverallSentimentAnalyzer {
      */
     @Override
     public String getAnalyzerClassName() {
-        return this.getAnalyzerClassName();
+        return this.getClass().getName();
     }
+
+
 }
