@@ -1,11 +1,9 @@
 package nlp;
 
-import edu.stanford.nlp.util.StringUtils;
-import org.apache.lucene.util.ToStringUtils;
-
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,9 +28,14 @@ public class TwitterPreProcessor {
     public static final String REPEATED_CHARACTERS_REGEX = "";
 
     public static void main(String args[]){
+        Scanner kb = new Scanner(System.in);
+        System.out.println("enter the input filename");
+        String inputFile = kb.nextLine();
+        System.out.println("enter the output filename");
+        String outputFile = kb.nextLine();
         List<Tweet> tweets = null;
         try {
-            tweets = IOTweetHelper.readTweetsFromCsvFile("tweets.csv");
+            tweets = IOTweetHelper.readTweetsFromCsvFile(inputFile);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -89,6 +92,6 @@ public class TwitterPreProcessor {
             }
         }
 
-        IOTweetHelper.writeSanitizedTweetsToCSV(sanitizedTweets, "sanitized.csv");
+        IOTweetHelper.writeSanitizedTweetsToCSV(sanitizedTweets, outputFile);
     }
 }
