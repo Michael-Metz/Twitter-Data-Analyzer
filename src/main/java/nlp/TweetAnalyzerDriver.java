@@ -1,10 +1,13 @@
 package nlp;
 
+import nlp.tweetanalyzers.*;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.time.ZonedDateTime;
 import java.util.*;
-import nlp.tweetanalyzers.*;
+
 /**
  * Hello world!
  */
@@ -47,7 +50,6 @@ public class TweetAnalyzerDriver {
                 while (true) {
                     System.out.println("Enter Path To Serialized Object File");
                     String fp = kb.nextLine();
-
                     try {
                         analyzedTweets = IOTweetHelper.readSerializedAnalyzedTweets(fp);
                     } catch (IOException e) {
@@ -110,7 +112,7 @@ public class TweetAnalyzerDriver {
         boolean menuThreeFlag = true;
         while (menuThreeFlag) {
             String[] menuThree = {"Determine date range of list", "Run stats", "Write analyzed tweets to csv file"};
-            CLIUtil.printBanner("Tweets Loaded", Integer.toString(sanitizedTweets.hashCode()));
+            CLIUtil.printBanner("memory usage", MemoryUsageUTIL.getUsedMemoryInMiB());
             choice = CLIUtil.displayMenu(menuThree);
 
             switch (choice) {
@@ -131,8 +133,7 @@ public class TweetAnalyzerDriver {
 
                     break;
                 case 1:
-                    System.out.println("This method is in development");
-                    //printSatistics(sanitizedTweets);
+                    printSatistics(analyzedTweets);
                     break;
                 case 2:
                     System.out.println("Enter the path for the file you want to save to");
@@ -159,13 +160,63 @@ public class TweetAnalyzerDriver {
         int totalPositive = 0;
         int totalVeryPostive = 0;
         int totalSentences = 0;
-        for (AnalyzedTweet tweet : tweets) {
-            int[] sentiments = tweet.getSentenceSentiments();
-            String[] sentences = tweet.getSentences();
-            totalSentences += sentiments.length;
-            for (int i = 0; i < sentiments.length; i++) {
-                int sentiment = sentiments[i];
-                String sentence = sentences[i];
+
+        Object analyzer = null;
+        try {
+            Class c = Class.forName(tweets.get(0).getAnalysisAuthorClassName());
+            Method factoryMethod = c.getDeclaredMethod("getInstance");
+            analyzer = factoryMethod.invoke(null, null);
+        } catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        if(analyzer instanceof SentenceSentimentAnalyzer) {
+            for (AnalyzedTweet tweet : tweets) {
+                int[] sentiments = tweet.getSentenceSentiments();
+                String[] sentences = tweet.getSentences();
+                totalSentences += sentiments.length;
+                for (int i = 0; i < sentiments.length; i++) {
+                    int sentiment = sentiments[i];
+                    String sentence = sentences[i];
+                    switch (sentiment) {
+                        case AnalyzedTweet.VERY_NEGATIVE_SENTIMENT:
+                            totalVeryNegative++;
+                            break;
+                        case AnalyzedTweet.NEGATIVE_SENTIMENT:
+                            totalNegative++;
+                            break;
+                        case AnalyzedTweet.NEUTRAL_SENTIMENT:
+                            totalNeutral++;
+                            break;
+                        case AnalyzedTweet.POSITIVE_SENTIMENT:
+                            totalPositive++;
+                            break;
+                        case AnalyzedTweet.VERY_POSITIVE_SENTIMENT:
+                            totalVeryPostive++;
+                            break;
+                        default:
+                            System.out.println(sentiment + " no sentitment " + sentence);
+                    }
+                }
+            }
+
+            System.out.printf("There are %d tweets, which compose %d sentences\n", tweets.size(), totalSentences);
+            System.out.println("Here are the sentence sentiment breakdown");
+            System.out.printf("Very Negative - %.2f%s : %d\n", ((totalVeryNegative * 1.0) / totalSentences) * 100, "%", totalVeryNegative);
+            System.out.printf("     Negative - %.2f%s : %d\n", ((totalNegative * 1.0) / totalSentences) * 100, "%", totalNegative);
+            System.out.printf("      Neutral - %.2f%s : %d\n", ((totalNeutral * 1.0) / totalSentences) * 100, "%", totalNeutral);
+            System.out.printf("     Positive - %.2f%s : %d\n", ((totalPositive * 1.0) / totalSentences) * 100, "%", totalPositive);
+            System.out.printf("Very Positive - %.2f%s : %d\n", ((totalVeryPostive * 1.0) / totalSentences) * 100, "%", totalVeryPostive);
+        }
+        if(analyzer instanceof OverallSentimentAnalyzer) {
+            totalVeryNegative = 0;
+            totalNegative = 0;
+            totalNeutral = 0;
+            totalPositive = 0;
+            totalVeryPostive = 0;
+            totalSentences = 0;
+            for (AnalyzedTweet tweet : tweets) {
+
+                int sentiment = tweet.getOverallSentiment();
                 switch (sentiment) {
                     case AnalyzedTweet.VERY_NEGATIVE_SENTIMENT:
                         totalVeryNegative++;
@@ -183,55 +234,17 @@ public class TweetAnalyzerDriver {
                         totalVeryPostive++;
                         break;
                     default:
-                        System.out.println(sentiment + " no sentitment " + sentence);
+                        System.out.println(sentiment + " no sentitment " + tweet.getText());
                 }
+
             }
+            System.out.println("\nHere is the overall sentiment breakdown");
+            System.out.printf("Very Negative - %.2f%s : %d\n", ((totalVeryNegative * 1.0) / tweets.size()) * 100, "%", totalVeryNegative);
+            System.out.printf("     Negative - %.2f%s : %d\n", ((totalNegative * 1.0) / tweets.size()) * 100, "%", totalNegative);
+            System.out.printf("      Neutral - %.2f%s : %d\n", ((totalNeutral * 1.0) / tweets.size()) * 100, "%", totalNeutral);
+            System.out.printf("     Positive - %.2f%s : %d\n", ((totalPositive * 1.0) / tweets.size()) * 100, "%", totalPositive);
+            System.out.printf("Very Positive - %.2f%s : %d\n", ((totalVeryPostive * 1.0) / tweets.size()) * 100, "%", totalVeryPostive);
         }
-        System.out.printf("There are %d tweets, which compose %d sentences\n", tweets.size(), totalSentences);
-        System.out.println("Here are the sentence sentiment breakdown");
-        System.out.printf("Very Negative - %.2f%s : %d\n", ((totalVeryNegative * 1.0) / totalSentences) * 100, "%", totalVeryNegative);
-        System.out.printf("     Negative - %.2f%s : %d\n", ((totalNegative * 1.0) / totalSentences) * 100, "%", totalNegative);
-        System.out.printf("      Neutral - %.2f%s : %d\n", ((totalNeutral * 1.0) / totalSentences) * 100, "%", totalNeutral);
-        System.out.printf("     Positive - %.2f%s : %d\n", ((totalPositive * 1.0) / totalSentences) * 100, "%", totalPositive);
-        System.out.printf("Very Positive - %.2f%s : %d\n", ((totalVeryPostive * 1.0) / totalSentences) * 100, "%", totalVeryPostive);
-
-       totalVeryNegative = 0;
-       totalNegative = 0;
-       totalNeutral = 0;
-       totalPositive = 0;
-       totalVeryPostive = 0;
-       totalSentences = 0;
-        for (AnalyzedTweet tweet : tweets) {
-
-            int sentiment = tweet.getOverallSentiment();
-            switch (sentiment) {
-                case AnalyzedTweet.VERY_NEGATIVE_SENTIMENT:
-                    totalVeryNegative++;
-                    break;
-                case AnalyzedTweet.NEGATIVE_SENTIMENT:
-                    totalNegative++;
-                    break;
-                case AnalyzedTweet.NEUTRAL_SENTIMENT:
-                    totalNeutral++;
-                    break;
-                case AnalyzedTweet.POSITIVE_SENTIMENT:
-                    totalPositive++;
-                    break;
-                case AnalyzedTweet.VERY_POSITIVE_SENTIMENT:
-                    totalVeryPostive++;
-                    break;
-                default:
-                    System.out.println(sentiment + " no sentitment " + tweet.getText());
-            }
-
-        }
-        System.out.println("\nHere is the overall sentiment breakdown");
-        System.out.printf("Very Negative - %.2f%s : %d\n", ((totalVeryNegative * 1.0) / tweets.size()) * 100, "%", totalVeryNegative);
-        System.out.printf("     Negative - %.2f%s : %d\n", ((totalNegative * 1.0) / tweets.size()) * 100, "%", totalNegative);
-        System.out.printf("      Neutral - %.2f%s : %d\n", ((totalNeutral * 1.0) / tweets.size()) * 100, "%", totalNeutral);
-        System.out.printf("     Positive - %.2f%s : %d\n", ((totalPositive * 1.0) / tweets.size()) * 100, "%", totalPositive);
-        System.out.printf("Very Positive - %.2f%s : %d\n", ((totalVeryPostive * 1.0) / tweets.size()) * 100, "%", totalVeryPostive);
     }
-
 
 }

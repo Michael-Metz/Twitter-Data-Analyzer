@@ -8,10 +8,6 @@ import opennlp.tools.doccat.*;
 import opennlp.tools.tokenize.Tokenizer;
 import opennlp.tools.tokenize.TokenizerME;
 import opennlp.tools.tokenize.TokenizerModel;
-import opennlp.tools.util.MarkableFileInputStreamFactory;
-import opennlp.tools.util.ObjectStream;
-import opennlp.tools.util.PlainTextByLineStream;
-import opennlp.tools.util.TrainingParameters;
 
 public class ApacheNLPTweetAnalyzer implements OverallSentimentAnalyzer, PercentageSentimentAnalyzer {
 
@@ -39,10 +35,10 @@ public class ApacheNLPTweetAnalyzer implements OverallSentimentAnalyzer, Percent
         //read in the bin model
         //
         try {
-            InputStream modelIn = new FileInputStream("/Users/benjaminmussell/IdeaProjects/Twitter-Data-Analyzer/OpenNLP_models/TrainingOutput.bin");
+            InputStream modelIn = new FileInputStream("OpenNLP_models/TrainingOutput.bin");
             doccatmodel = new DoccatModel(modelIn);
             documentCategorizer= new DocumentCategorizerME(doccatmodel);
-            modelIn = new FileInputStream("/Users/benjaminmussell/IdeaProjects/Twitter-Data-Analyzer/OpenNLP_models/en-token.bin");
+            modelIn = new FileInputStream("OpenNLP_models/en-token.bin");
             tokenizermodel= new TokenizerModel(modelIn);
             tokenizer = new TokenizerME(tokenizermodel);
 
@@ -105,7 +101,7 @@ public class ApacheNLPTweetAnalyzer implements OverallSentimentAnalyzer, Percent
         List<AnalyzedTweet> analyzedTweets = new LinkedList<>();
         for(SanitizedTweet sanitizedTweet : sanitizedTweets){
             AnalyzedTweet analyzedTweet = analyzeSanitizedTweetSentiment(sanitizedTweet);
-            System.out.println("ananlyzing " + analyzedTweet.getSanitizedText());
+            System.out.println("analyzing: " + analyzedTweet.getSanitizedText());
             analyzedTweets.add(analyzedTweet);
         }
         return analyzedTweets;
