@@ -11,29 +11,29 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
-public class StandfordNLPTweetAnalyzer implements OverallSentimentAnalyzer, SentenceSentimentAnalyzer {
+public class StanfordNLPTweetAnalyzer implements OverallSentimentAnalyzer, SentenceSentimentAnalyzer {
 
     private StanfordCoreNLP pipeline;
     private Properties properties;
 
-    private static StandfordNLPTweetAnalyzer standfordNLPTweetAnalyzer = null;
+    private static StanfordNLPTweetAnalyzer stanfordNLPTweetAnalyzer = null;
 
     /**
      * Singleton design pattern
      * @return
      */
-    public static StandfordNLPTweetAnalyzer getInstance(){
+    public static StanfordNLPTweetAnalyzer getInstance(){
         System.out.println("get instance");
-        if(standfordNLPTweetAnalyzer == null)
-            standfordNLPTweetAnalyzer = new StandfordNLPTweetAnalyzer();
-        return standfordNLPTweetAnalyzer;
+        if(stanfordNLPTweetAnalyzer == null)
+            stanfordNLPTweetAnalyzer = new StanfordNLPTweetAnalyzer();
+        return stanfordNLPTweetAnalyzer;
     }
 
     /**
      * Private Constructor that sets up the nlp pipeline. Uses the better model if the file exists,
      * otherwise uses the default model.
      */
-    private StandfordNLPTweetAnalyzer(){
+    private StanfordNLPTweetAnalyzer(){
         properties = new Properties();
         properties.setProperty("annotators", "tokenize,ssplit,pos,lemma,ner,parse, sentiment");
         properties.setProperty("ner.useSUTime", "false");

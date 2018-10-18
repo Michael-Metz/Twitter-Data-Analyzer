@@ -79,7 +79,7 @@ public class TweetAnalyzerDriver {
 
             switch (choice) {
                 case 0:
-                    stanfordNlpAnalyzer = StandfordNLPTweetAnalyzer.getInstance();
+                    stanfordNlpAnalyzer = StanfordNLPTweetAnalyzer.getInstance();
                     analyzedTweets = stanfordNlpAnalyzer.analyzeSanitizedTweetsSentiment(sanitizedTweets);
                     break;
                 case 1:

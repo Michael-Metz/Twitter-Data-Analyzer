@@ -1,7 +1,5 @@
 package nlp;
 
-import nlp.tweetanalyzers.StandfordNLPTweetAnalyzer;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
