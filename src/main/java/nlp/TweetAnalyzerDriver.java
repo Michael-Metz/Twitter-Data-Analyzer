@@ -74,7 +74,7 @@ public class TweetAnalyzerDriver {
                     "Analyze tweets with random analyzer",
                     "Serialize Analyzed Tweets to object file",
                                 "Next Menu"};
-            CLIUtil.printBanner("Tweets Loaded", Integer.toString(sanitizedTweets.hashCode()));
+//            CLIUtil.printBanner("Tweets Loaded", Integer.toString(analyzedTweets.hashCode()));
             choice = CLIUtil.displayMenu(menuTwo);
 
             switch (choice) {

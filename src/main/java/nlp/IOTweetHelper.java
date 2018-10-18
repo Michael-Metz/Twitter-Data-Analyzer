@@ -2,6 +2,7 @@ package nlp;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 
 import java.io.*;
@@ -28,6 +29,7 @@ public class IOTweetHelper {
             "Overall sentiment",
             "Overall positive sentiment percent",
             "Overall negative sentiment percent"};
+    final static String[] ADDITIONAL_TWEET_CONSOLIDATER_HEADERS = {"Sentiment consensus"};
 
     private transient static DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH);
 
@@ -81,6 +83,13 @@ public class IOTweetHelper {
             j++;
         }
         return array;
+    }
+    private static String[] generateConsensusHeaders() {
+        String[] parentHeaders = generateSanitizedTweetHeaders();
+        String[] both = (String[]) ArrayUtils.addAll(parentHeaders, ADDITIONAL_TWEET_CONSOLIDATER_HEADERS);
+        String[] both1 = (String[]) ArrayUtils.addAll(both, ADDITIONAL_ANALYZED_TWEET_HEADERS);
+        String[] both2 = (String[]) ArrayUtils.addAll(both1, ADDITIONAL_ANALYZED_TWEET_HEADERS);
+        return both2;
     }
 
     /**
@@ -182,7 +191,61 @@ public class IOTweetHelper {
         }
         pw.close();
     }
+    public static void writeTweetConsolidatorToCSV(TweetConsolidator tc, String filePath) {
+        PrintWriter pw = null;
 
+        try {
+            pw = new PrintWriter(filePath);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        //print headers
+        String[] headers = generateConsensusHeaders();
+        int numCols = headers.length;
+
+        for (int i = 0; i < numCols - 1; i++) {
+            pw.print(headers[i] + ",");
+        }
+        pw.println(headers[numCols - 1]); //last column doesn't need a comma
+
+
+        //print analyzed tweets
+        for (int i = 0; i < tc.apache.size(); i++)
+        {
+            AnalyzedTweet apacheTweet = tc.apache.get(i);
+            AnalyzedTweet stanfordTweet = tc.stanford.get(i);
+            Map<String, String> apacheMap = mapTweetToCSVColumns(apacheTweet);
+            Map<String, String> stanfordMap = mapTweetToCSVColumns(stanfordTweet);
+
+            String entry = null;
+            //print sanitized tweet information
+            for (int j = 0; j <= 30; j++)
+            {
+                entry = apacheMap.get(headers[j]);
+                pw.print(StringEscapeUtils.escapeCsv(entry) + ",");
+            }
+
+            //print tweet sentimentConsensus
+            pw.print(tc.sentimentConsensus[i] + ",");
+
+            //print apache analyzed info
+            for(int j = 32; j <= 35; j++){
+                entry = apacheMap.get(headers[j]);
+                pw.print(StringEscapeUtils.escapeCsv(entry) + ",");
+            }
+            //print apache analyzed info
+            for(int j = 36; j <= 38; j++){
+                entry = stanfordMap.get(headers[j]);
+                pw.print(StringEscapeUtils.escapeCsv(entry) + ",");
+            }
+            //print last column
+            entry = stanfordMap.get(headers[numCols - 1]);
+            pw.println(StringEscapeUtils.escapeCsv(entry)); //last column doesn't need a comma
+        }
+        pw.close();
+
+    }
     public static void writeAnalyzedTweetsToCSV(List<AnalyzedTweet> analyzedTweets, String filePath) {
         PrintWriter pw = null;
 

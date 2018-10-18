@@ -1,5 +1,7 @@
 package nlp;
 
+import nlp.tweetanalyzers.StandfordNLPTweetAnalyzer;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,12 +10,14 @@ import java.util.List;
 
 public class TweetConsolidator {
     ArrayList<AnalyzedTweet> stanford = null, apache = null;
+    int[] sentimentConsensus;
 
+    int posCount, negCount, neutralCount, undefindedCount;
     public TweetConsolidator(List<AnalyzedTweet> stanford, List<AnalyzedTweet> apache) {
         this.stanford = new ArrayList<>(stanford.size());
         this.apache = new ArrayList<>(apache.size());
 
-        //copy them over to new lists because were goint to manipulate them
+        //copy them over to new lists because were going to manipulate them
         for(AnalyzedTweet tweet : stanford)
             this.stanford.add(tweet);
         for(AnalyzedTweet tweet : apache)
@@ -25,7 +29,7 @@ public class TweetConsolidator {
     }
 
     /**
-     * Will arrange tweets such that both stanford and apachi will have the same number of tweets
+     * Will arrange tweets such that both stanford and apache will have the same number of tweets
      * in other words stanford and apache will have the exact same tweets in the exact same order
      * Except they will have different sentiment decisions for each tweet
      */
@@ -47,7 +51,43 @@ public class TweetConsolidator {
         stanford = stanfordTwo;
         apache = apacheTwo;
     }
+    public void formConsensus(){
+        sentimentConsensus = new int[stanford.size()];
+        for(int i = 0; i < stanford.size(); i++){
+            int stanfordSentiment = stanford.get(i).getOverallSentiment();
+            int apacheSentiment = apache.get(i).getOverallSentiment();
 
+            if(stanfordSentiment == AnalyzedTweet.VERY_POSITIVE_SENTIMENT)
+                stanfordSentiment = AnalyzedTweet.POSITIVE_SENTIMENT;
+            else if(stanfordSentiment == AnalyzedTweet.VERY_NEGATIVE_SENTIMENT)
+                stanfordSentiment = AnalyzedTweet.NEGATIVE_SENTIMENT;
+
+            if(apacheSentiment == AnalyzedTweet.VERY_POSITIVE_SENTIMENT)
+                apacheSentiment = AnalyzedTweet.POSITIVE_SENTIMENT;
+            else if(apacheSentiment == AnalyzedTweet.VERY_NEGATIVE_SENTIMENT)
+                apacheSentiment = AnalyzedTweet.NEGATIVE_SENTIMENT;
+
+            if(apacheSentiment == stanfordSentiment){
+                switch (apacheSentiment){
+                    case 1:
+                        sentimentConsensus[i] = 1;
+                        posCount++;
+                        break;
+                    case -1:
+                        sentimentConsensus[i] = -1;
+                        negCount++;
+                        break;
+                    case 0:
+                        sentimentConsensus[i] = 0;
+                        neutralCount++;
+                        break;
+                }
+            }else {
+                sentimentConsensus[i] = Byte.MIN_VALUE;
+                undefindedCount++;
+            }
+        }
+    }
     /**
      * call organizeTweets first
      * @return
@@ -108,21 +148,39 @@ public class TweetConsolidator {
         List<AnalyzedTweet> apache = null, stanford = null;
 
 
-//        try {
-//            stanford = IOUtil.readSerializedTweets(stanfordPath);
-//            apache = IOUtil.readSerializedTweets(apachePath);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        } catch (ClassNotFoundException e) {
-//            e.printStackTrace();
-//        }
+        System.out.println("Reading serialized");
 
+        try {
+            stanford = IOTweetHelper.readSerializedAnalyzedTweets(stanfordPath);
+            apache = IOTweetHelper.readSerializedAnalyzedTweets(apachePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Generating object");
         TweetConsolidator tc = new TweetConsolidator(stanford, apache);
-        tc.organizeTweets();
+        System.out.println("Organizing tweets");
 
-        List<Tweet> pos = tc.findPositiveTweets();
-        List<Tweet> neg = tc.findNegativeTweets();
-        List<Tweet> undefined = tc.findUndefinedTweets();
+        tc.organizeTweets();
+        System.out.println("forming consensus tweets");
+
+        tc.formConsensus();
+        System.out.println("Writing tweets");
+        System.out.printf("%s memory\n\n",MemoryUsageUTIL.getPercentageUsedFormatted());
+        IOTweetHelper.writeTweetConsolidatorToCSV(tc,"merged.csv");
+
+        System.out.printf("%d tweets compared,\n\n",tc.apache.size());
+        System.out.printf("pos: %d %.2f%%\n",tc.posCount,(tc.posCount/(tc.apache.size()*1.0)*100));
+        System.out.printf("neg: %d %.2f%%\n",tc.negCount,(tc.negCount/(tc.apache.size()*1.0)*100));
+        System.out.printf("neu: %d %.2f%%\n",tc.neutralCount,(tc.neutralCount/(tc.apache.size()*1.0))*100);
+        System.out.printf("udf: %d %.2f%%\n",tc.undefindedCount,(tc.undefindedCount/(tc.apache.size()*1.0))*100);
+
+
+//        List<Tweet> pos = tc.findPositiveTweets();
+//        List<Tweet> neg = tc.findNegativeTweets();
+//        List<Tweet> undefined = tc.findUndefinedTweets();
 
 //        IOUtil.writeTweetsToCSVFile(AnalyzedTweet.POSITIVE_SENTIMENT, pos, "positive.csv");
 //        IOUtil.writeTweetsToCSVFile(AnalyzedTweet.NEGATIVE_SENTIMENT, neg, "negative.csv");

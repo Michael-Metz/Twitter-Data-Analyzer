@@ -6,6 +6,7 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import nlp.AnalyzedTweet;
 import nlp.SanitizedTweet;
 
+import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
@@ -28,10 +29,22 @@ public class StandfordNLPTweetAnalyzer implements OverallSentimentAnalyzer, Sent
         return standfordNLPTweetAnalyzer;
     }
 
+    /**
+     * Private Constructor that sets up the nlp pipeline. Uses the better model if the file exists,
+     * otherwise uses the default model.
+     */
     private StandfordNLPTweetAnalyzer(){
         properties = new Properties();
-        properties.setProperty("annotators", "tokenize,ssplit,pos,lemma,ner,parse,depparse, sentiment");
+        properties.setProperty("annotators", "tokenize,ssplit,pos,lemma,ner,parse, sentiment");
         properties.setProperty("ner.useSUTime", "false");
+        boolean useDefaultModel = false;
+        String betterModel = "stanford-nlp-models/gate-EN-twitter.model";
+        File file = new File("stanford-nlp-models/gate-EN-twitter.model");
+        if(file.exists() && !file.isDirectory())
+            useDefaultModel = true;
+        if(useDefaultModel)
+            properties.setProperty("pos.model",betterModel);
+
         pipeline = new StanfordCoreNLP(properties);
     }
     @Override
