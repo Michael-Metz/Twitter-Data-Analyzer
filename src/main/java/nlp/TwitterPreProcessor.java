@@ -1,6 +1,7 @@
 package nlp;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
@@ -47,10 +48,12 @@ public class TwitterPreProcessor {
         Matcher matcher = null;
         int matchCount = 0;
 
-        List<SanitizedTweet> sanitizedTweets = new LinkedList<>();
+        List<SanitizedTweet> sanitizedTweets = new ArrayList<>(tweets.size());
         SanitizedTweet sanitizedTweet = null;
-        for(Tweet tweet : tweets)
-        {
+        for (int i = 0; i < tweets.size(); i++) {
+            if(i % 10000 == 0)
+                System.out.printf("Sanitizing %d out of %d done: %.2f%%\n", i, tweets.size(), ((i*1.0)/tweets.size())*100);
+            Tweet tweet = tweets.get(i);
             sanitizedTweet = new SanitizedTweet(tweet);
             String text = sanitizedTweet.getText();
             //handle web urls
@@ -59,7 +62,7 @@ public class TwitterPreProcessor {
             while (matcher.find())
                 matchCount++;
             sanitizedTweet.setWebUrlCountFromText(matchCount);
-            text = text.replaceAll(WEB_URL_REGEX,"");
+            text = text.replaceAll(WEB_URL_REGEX, "");
 
             //handle user names
             matcher = userNamePattern.matcher(text);
@@ -67,7 +70,7 @@ public class TwitterPreProcessor {
             while (matcher.find())
                 matchCount++;
             sanitizedTweet.setUserNamesCountFromText(matchCount);
-            text = text.replaceAll(USER_NAME_REGEX,"");
+            text = text.replaceAll(USER_NAME_REGEX, "");
 
             //handle hashtags
             matcher = hashTagPattern.matcher(text);
@@ -75,7 +78,7 @@ public class TwitterPreProcessor {
             while (matcher.find())
                 matchCount++;
             sanitizedTweet.setHashTagsCountFromText(matchCount);
-            text = text.replaceAll(HASH_TAG_REGEX,"");
+            text = text.replaceAll(HASH_TAG_REGEX, "");
 
             //handle repeated punctuation
             matcher = repeatedPunctuationPattern.matcher(text);
@@ -83,10 +86,10 @@ public class TwitterPreProcessor {
             while (matcher.find())
                 matchCount++;
             sanitizedTweet.setRepeatedPunctuationCountFromText(matchCount);
-            text = text.replaceAll(REPEATED_PUNCTUATION_REGEX,"$1");
+            text = text.replaceAll(REPEATED_PUNCTUATION_REGEX, "$1");
 
             //removed tweets with less then 10 characters of sanitized text. Little text might screw up nlp analyzers
-            if( 10 < text.trim().length()) {
+            if (10 < text.trim().length()) {
                 sanitizedTweet.setSanitizedText(text);
                 sanitizedTweets.add(sanitizedTweet);
             }

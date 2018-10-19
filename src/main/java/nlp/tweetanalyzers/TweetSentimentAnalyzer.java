@@ -33,7 +33,7 @@ public interface TweetSentimentAnalyzer {
      * @param sanitizedTweets
      * @return
      */
-    List<AnalyzedTweet> analyzeSanitizedTweetsSentiment(List<SanitizedTweet> sanitizedTweets);
+    List<AnalyzedTweet> analyzeSanitizedTweetsSentiment(List<? extends SanitizedTweet> sanitizedTweets);
 
     /**
      * Returns the name of the analyzed classname use this to sign each tweet you analyze with the name of your class.

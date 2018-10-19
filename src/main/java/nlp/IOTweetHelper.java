@@ -104,7 +104,7 @@ public class IOTweetHelper {
         Reader in = new FileReader(fileName);
 
         Iterable<CSVRecord> records = CSVFormat.DEFAULT.withHeader(RAW_TWITTER_DATA_HEADERS).withFirstRecordAsHeader().parse(in);
-        List<Tweet> tweets = new LinkedList<Tweet>();
+        List<Tweet> tweets = new ArrayList<>();
         for(CSVRecord record : records)
         {
             Tweet tweet = generateTweetFromMap(record.toMap());
@@ -124,7 +124,7 @@ public class IOTweetHelper {
         Reader in = new FileReader(fileName);
         String[] headers = generateSanitizedTweetHeaders();
         Iterable<CSVRecord> records = CSVFormat.DEFAULT.withHeader(headers).withFirstRecordAsHeader().parse(in);
-        List<SanitizedTweet> sanitizedTweets = new LinkedList<SanitizedTweet>();
+        List<SanitizedTweet> sanitizedTweets = new ArrayList<>();
         for(CSVRecord record : records)
         {
             SanitizedTweet tweet = generateSanitizedTweetFromMap(record.toMap());
@@ -188,6 +188,8 @@ public class IOTweetHelper {
             }
             entry = map.get(headers[numCols - 1]);
             pw.println(StringEscapeUtils.escapeCsv(entry)); //last column doesn't need a comma
+            if(i % 10000 == 0)
+                System.out.printf("Writing %d out of %d done: %.2f%%\n", i, tweets.size(), ((i*1.0)/tweets.size())*100);
         }
         pw.close();
     }

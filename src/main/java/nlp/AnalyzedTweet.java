@@ -10,6 +10,7 @@ public class AnalyzedTweet extends SanitizedTweet implements Comparable{
     public static final int NEUTRAL_SENTIMENT = 0;
     public static final int POSITIVE_SENTIMENT = 1;
     public static final int VERY_POSITIVE_SENTIMENT = 2;
+    public static final int UNDEFINED_SENTIMENT = -127;
 
     //TODO consider using a package to do inline map initialization or immutable maps.
     private static Map<Integer, String> sentimentMap = null;

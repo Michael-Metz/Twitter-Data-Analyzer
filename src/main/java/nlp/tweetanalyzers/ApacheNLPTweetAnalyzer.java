@@ -97,11 +97,15 @@ public class ApacheNLPTweetAnalyzer implements OverallSentimentAnalyzer, Percent
      * @SEE AnalyzedTweet analyzeSanitizedTweetSentiment(SanitizedTweet sanitizedTweet);
      */
     @Override
-    public List<AnalyzedTweet> analyzeSanitizedTweetsSentiment(List<SanitizedTweet> sanitizedTweets) {
+    public List<AnalyzedTweet> analyzeSanitizedTweetsSentiment(List<? extends SanitizedTweet> sanitizedTweets) {
         List<AnalyzedTweet> analyzedTweets = new LinkedList<>();
-        for(SanitizedTweet sanitizedTweet : sanitizedTweets){
+        int numTweets = sanitizedTweets.size();
+
+        for (int i = 0; i < numTweets; i++) {
+            SanitizedTweet sanitizedTweet = sanitizedTweets.get(i);
             AnalyzedTweet analyzedTweet = analyzeSanitizedTweetSentiment(sanitizedTweet);
-            System.out.println("analyzing: " + analyzedTweet.getSanitizedText());
+            if (i % 500 == 0)
+                System.out.printf("%s analyzing %d out of %d   %.2f%% done\n", getAnalyzerClassName(),i, numTweets, (((i * 1.0) / numTweets) * 100));
             analyzedTweets.add(analyzedTweet);
         }
         return analyzedTweets;

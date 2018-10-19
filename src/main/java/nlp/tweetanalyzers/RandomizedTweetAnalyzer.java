@@ -49,7 +49,7 @@ public class RandomizedTweetAnalyzer implements OverallSentimentAnalyzer, Percen
     }
 
     @Override
-    public List<AnalyzedTweet> analyzeSanitizedTweetsSentiment(List<SanitizedTweet> sanitizedTweets) {
+    public List<AnalyzedTweet> analyzeSanitizedTweetsSentiment(List<? extends SanitizedTweet> sanitizedTweets) {
         List<AnalyzedTweet> analyzedTweets = new LinkedList<>();
         for(SanitizedTweet sanitizedTweet : sanitizedTweets){
             AnalyzedTweet analyzedTweet = analyzeSanitizedTweetSentiment(sanitizedTweet);
