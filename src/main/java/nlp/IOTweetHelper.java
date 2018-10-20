@@ -267,7 +267,7 @@ public class IOTweetHelper {
         pw.println(headers[numCols - 1]); //last column doesn't need a comma
 
         //print analyzed tweets
-        for (int i = 0; i < analyzedTweets.size(); i++)
+    for (int i = 0; i < analyzedTweets.size(); i++)
         {
             AnalyzedTweet tweet = analyzedTweets.get(i);
             Map<String, String> map = mapTweetToCSVColumns(tweet);

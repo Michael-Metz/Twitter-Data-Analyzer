@@ -117,6 +117,7 @@ public class StanfordNLPTweetAnalyzer implements OverallSentimentAnalyzer, Sente
                 System.out.printf("%s analyzing %d out of %d   %.2f%% done\n", getAnalyzerClassName(),i, numTweets, (((i * 1.0) / numTweets) * 100));
             SanitizedTweet sanitizedTweet = sanitizedTweets.get(i);
             AnalyzedTweet analyzedTweet = analyzeSanitizedTweetSentiment(sanitizedTweet);
+            System.out.println("ananlyzing " + analyzedTweet.getSanitizedText());
             analyzedTweets.add(analyzedTweet);
         }
         return analyzedTweets;
