@@ -2,13 +2,11 @@ package nlp.tweetanalyzers;
 
 import edu.stanford.nlp.pipeline.CoreDocument;
 import edu.stanford.nlp.pipeline.CoreSentence;
-import edu.stanford.nlp.pipeline.SentimentAnnotator;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
-import edu.stanford.nlp.util.logging.RedwoodConfiguration;
+//import edu.stanford.nlp.util.logging.RedwoodConfiguration; //#TODO commented out because doesnt work on unix :/
 import nlp.AnalyzedTweet;
 import nlp.SanitizedTweet;
 
-import javax.swing.text.html.HTMLDocument;
 import java.io.File;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -38,8 +36,8 @@ public class StanfordNLPTweetAnalyzer implements OverallSentimentAnalyzer, Sente
      */
     private StanfordNLPTweetAnalyzer(String pathToModels, boolean muteStanfordRedLogging){
         this.pathToModels = pathToModels;
-        if(muteStanfordRedLogging)
-            RedwoodConfiguration.current().clear().apply();
+//        if(muteStanfordRedLogging)
+//            RedwoodConfiguration.current().clear().apply(); #TODO b/c doesnt work on unix...
 
         properties = new Properties();
         properties.setProperty("annotators", "tokenize,ssplit,pos,parse, sentiment");
