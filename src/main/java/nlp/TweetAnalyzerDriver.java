@@ -1,12 +1,15 @@
 package nlp;
 
 import nlp.tweetanalyzers.*;
+import opennlp.tools.cmdline.CLI;
 
-import java.io.*;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
 /**
  * Hello world!
@@ -20,7 +23,7 @@ public class TweetAnalyzerDriver {
 
     private static TweetSentimentAnalyzer stanfordNlpAnalyzer = null;
     private static ApacheNLPTweetAnalyzer apacheNlpAnalyzer = null;
-    private static TweetSentimentAnalyzer randomSentimentAnalyzer = new RandomizedTweetAnalyzer();
+    private static TweetSentimentAnalyzer randomSentimentAnalyzer = null;
 
     public static void main(String[] args) {
         Scanner kb = new Scanner(System.in);
@@ -31,6 +34,8 @@ public class TweetAnalyzerDriver {
         List<SanitizedTweet> sanitizedTweets = null;
         List<AnalyzedTweet> analyzedTweets = null;
 
+
+        boolean skipMenuTwo = false;
         switch (choice) {
             case 0:
                 //repeat until we read in a valid csv file
@@ -60,6 +65,7 @@ public class TweetAnalyzerDriver {
                         continue;
                     }
 
+                    skipMenuTwo = true;
                     break;
                 }
                 break;
@@ -68,18 +74,22 @@ public class TweetAnalyzerDriver {
 
 
         boolean menuTwoFlag = true;
-        while (menuTwoFlag) {
+        while (menuTwoFlag && skipMenuTwo == false) {
             String[] menuTwo = {"Analyze tweets with stanford analyzer",
                     "Analyze tweets with apache analyzer",
                     "Analyze tweets with random analyzer",
-                    "Serialize Analyzed Tweets to object file",
-                                "Next Menu"};
-//            CLIUtil.printBanner("Tweets Loaded", Integer.toString(analyzedTweets.hashCode()));
-            choice = CLIUtil.displayMenu(menuTwo);
+                    "Next Menu"};
 
+            boolean areTweetsAnalyzed = (analyzedTweets != null);
+            String subTitle = String.format("Tweets: %d %s",
+                    areTweetsAnalyzed ? analyzedTweets.size() : sanitizedTweets.size(),
+                    areTweetsAnalyzed ? "Analyzed by " + analyzedTweets.get(0).getAnalysisAuthorClassName() : "Sanitized");
+            CLIUtil.printBanner("Menu Two",subTitle);
+
+            choice = CLIUtil.displayMenu(menuTwo);
             switch (choice) {
                 case 0:
-                    stanfordNlpAnalyzer = StanfordNLPTweetAnalyzer.getInstance();
+                    stanfordNlpAnalyzer = StanfordNLPTweetAnalyzer.getInstance(false);
                     analyzedTweets = stanfordNlpAnalyzer.analyzeSanitizedTweetsSentiment(sanitizedTweets);
                     break;
                 case 1:
@@ -87,9 +97,26 @@ public class TweetAnalyzerDriver {
                     analyzedTweets = apacheNlpAnalyzer.analyzeSanitizedTweetsSentiment(sanitizedTweets);
                     break;
                 case 2:
-                analyzedTweets = randomSentimentAnalyzer.analyzeSanitizedTweetsSentiment(sanitizedTweets);
-                break;
+                    randomSentimentAnalyzer = RandomizedTweetAnalyzer.getInstance();
+                    analyzedTweets = randomSentimentAnalyzer.analyzeSanitizedTweetsSentiment(sanitizedTweets);
+                    break;
                 case 3:
+                    menuTwoFlag = false;
+                    break;
+            }
+        }
+
+        boolean menuThreeFlag = true;
+        while (menuThreeFlag) {
+            String[] menuThree = {
+                    "Serialize AnalyzedTweets",
+                    "Next Menu"};
+            String subTitle = "save to file so you don't have to re-analyze tweets";
+            CLIUtil.printBanner("Menu Three",subTitle);
+
+            choice = CLIUtil.displayMenu(menuThree);
+            switch (choice) {
+                case 0:
                     while (true) {
                         System.out.println("Enter file name to serialize the analyzed tweets to");
                         String fp = kb.nextLine();
@@ -102,18 +129,18 @@ public class TweetAnalyzerDriver {
                         break;
                     }
                     break;
-                case 4:
-                menuTwoFlag = false;
+                case 1:
+                    menuThreeFlag = false;
                     break;
             }
         }
 
 
-        boolean menuThreeFlag = true;
-        while (menuThreeFlag) {
-            String[] menuThree = {"Determine date range of list", "Run stats", "Write analyzed tweets to csv file"};
+        boolean menuFourFlag = true;
+        while (menuFourFlag) {
+            String[] menuFour = {"Determine date range of list", "Run stats", "Write analyzed tweets to csv file", "Output csv files separated csv files", "analyze tweets against apache"};
             CLIUtil.printBanner("memory usage", MemoryUsageUTIL.getUsedMemoryInMiB());
-            choice = CLIUtil.displayMenu(menuThree);
+            choice = CLIUtil.displayMenu(menuFour);
 
             switch (choice) {
                 case 0:
@@ -127,9 +154,9 @@ public class TweetAnalyzerDriver {
                             maxDate = d;
                     }
                     System.out.printf("The Analyzed list contains %d tweets ranging from %s to %s\n",
-                                        analyzedTweets.size(),
-                                        minDate.toString(),
-                                        maxDate.toString());
+                            analyzedTweets.size(),
+                            minDate.toString(),
+                            maxDate.toString());
 
                     break;
                 case 1:
@@ -140,12 +167,76 @@ public class TweetAnalyzerDriver {
                     String fp = kb.nextLine();
                     IOTweetHelper.writeAnalyzedTweetsToCSV(analyzedTweets, fp);
                     break;
+                case 3:
+                    System.out.println("The current loaded tweets we will output pospos.csv, posneu.csv, neu.csv, neuneg.csv, negneg.csv");
+                    String[] fileNames = {"pospos.csv", "posneg.csv", "neu.csv", "neuneg.csv", "negneg.csv", "undf.csv"};
+                    List<AnalyzedTweet>[] toFiles = (List<AnalyzedTweet>[]) new List[fileNames.length];
+                    for (int i = 0; i < fileNames.length; i++) {
+                        toFiles[i] = new ArrayList<>();
+                    }
+                    for (AnalyzedTweet analyzedTweet : analyzedTweets) {
+                        switch (analyzedTweet.getOverallSentiment()) {
+                            case AnalyzedTweet.VERY_POSITIVE_SENTIMENT:
+                                toFiles[0].add(analyzedTweet);
+                                break;
+                            case AnalyzedTweet.POSITIVE_SENTIMENT:
+                                toFiles[1].add(analyzedTweet);
+                                break;
+                            case AnalyzedTweet.NEUTRAL_SENTIMENT:
+                                toFiles[2].add(analyzedTweet);
+                                break;
+                            case AnalyzedTweet.NEGATIVE_SENTIMENT:
+                                toFiles[3].add(analyzedTweet);
+                                break;
+                            case AnalyzedTweet.VERY_NEGATIVE_SENTIMENT:
+                                toFiles[4].add(analyzedTweet);
+                                break;
+                            case AnalyzedTweet.UNDEFINED_SENTIMENT:
+                                toFiles[5].add(analyzedTweet);
+                                break;
+                        }
+                    }
+                    for (int i = 0; i < fileNames.length; i++) {
+                        IOTweetHelper.writeAnalyzedTweetsToCSV(toFiles[i], fileNames[i]);
+                    }
+                    break;
+                case 4:
+                    apacheNlpAnalyzer = ApacheNLPTweetAnalyzer.getInstance();
+
+                    List<AnalyzedTweet> apacheAnalyzed = apacheNlpAnalyzer.analyzeSanitizedTweetsSentiment(analyzedTweets);
+                    List<AnalyzedTweet> postive = new ArrayList<>();
+                    List<AnalyzedTweet> negative = new ArrayList<>();
+                    List<AnalyzedTweet> nuetral = new ArrayList<>();
+                    List<AnalyzedTweet> undefined = new ArrayList<>();
+                    for (int i = 0; i < analyzedTweets.size(); i++) {
+                        int apacheSent = apacheAnalyzed.get(i).getOverallSentiment();
+                        int stanfordSent = analyzedTweets.get(i).getOverallSentiment();
+                        apacheSent = apacheSent == 2 || apacheSent == 1 ? 1 : apacheSent;
+                        apacheSent = apacheSent == -2 || apacheSent == -1 ? -1 : apacheSent;
+                        if (apacheSent == stanfordSent) {
+                            switch (apacheSent) {
+                                case -1:
+                                    negative.add(apacheAnalyzed.get(i));
+                                    break;
+                                case 0:
+                                    nuetral.add(apacheAnalyzed.get(i));
+                                    break;
+                                case 1:
+                                    postive.add(apacheAnalyzed.get(i));
+                                    break;
+                            }
+                        }
+                        IOTweetHelper.writeAnalyzedTweetsToCSV(negative, "apache-neg.csv");
+                        IOTweetHelper.writeAnalyzedTweetsToCSV(nuetral, "apache-nue.csv");
+                        IOTweetHelper.writeAnalyzedTweetsToCSV(postive, "apache-pos.csv");
+                    }
+                    break;
+
             }
 
         }
 
     }
-
 
 
     /**
@@ -159,6 +250,7 @@ public class TweetAnalyzerDriver {
         int totalNeutral = 0;
         int totalPositive = 0;
         int totalVeryPostive = 0;
+        int totalUndefined = 0;
         int totalSentences = 0;
 
         Object analyzer = null;
@@ -169,7 +261,7 @@ public class TweetAnalyzerDriver {
         } catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
             e.printStackTrace();
         }
-        if(analyzer instanceof SentenceSentimentAnalyzer) {
+        if (analyzer instanceof SentenceSentimentAnalyzer) {
             for (AnalyzedTweet tweet : tweets) {
                 int[] sentiments = tweet.getSentenceSentiments();
                 String[] sentences = tweet.getSentences();
@@ -193,6 +285,9 @@ public class TweetAnalyzerDriver {
                         case AnalyzedTweet.VERY_POSITIVE_SENTIMENT:
                             totalVeryPostive++;
                             break;
+                        case AnalyzedTweet.UNDEFINED_SENTIMENT:
+                            totalUndefined++;
+                            break;
                         default:
                             System.out.println(sentiment + " no sentitment " + sentence);
                     }
@@ -206,14 +301,16 @@ public class TweetAnalyzerDriver {
             System.out.printf("      Neutral - %.2f%s : %d\n", ((totalNeutral * 1.0) / totalSentences) * 100, "%", totalNeutral);
             System.out.printf("     Positive - %.2f%s : %d\n", ((totalPositive * 1.0) / totalSentences) * 100, "%", totalPositive);
             System.out.printf("Very Positive - %.2f%s : %d\n", ((totalVeryPostive * 1.0) / totalSentences) * 100, "%", totalVeryPostive);
+            System.out.printf("    Undefined - %.2f%s : %d\n", ((totalUndefined * 1.0) / totalSentences) * 100, "%", totalUndefined);
         }
-        if(analyzer instanceof OverallSentimentAnalyzer) {
+        if (analyzer instanceof OverallSentimentAnalyzer) {
             totalVeryNegative = 0;
             totalNegative = 0;
             totalNeutral = 0;
             totalPositive = 0;
             totalVeryPostive = 0;
-            totalSentences = 0;
+            totalUndefined = 0;
+
             for (AnalyzedTweet tweet : tweets) {
 
                 int sentiment = tweet.getOverallSentiment();
@@ -233,6 +330,9 @@ public class TweetAnalyzerDriver {
                     case AnalyzedTweet.VERY_POSITIVE_SENTIMENT:
                         totalVeryPostive++;
                         break;
+                    case AnalyzedTweet.UNDEFINED_SENTIMENT:
+                        totalUndefined++;
+                        break;
                     default:
                         System.out.println(sentiment + " no sentitment " + tweet.getText());
                 }
@@ -244,6 +344,7 @@ public class TweetAnalyzerDriver {
             System.out.printf("      Neutral - %.2f%s : %d\n", ((totalNeutral * 1.0) / tweets.size()) * 100, "%", totalNeutral);
             System.out.printf("     Positive - %.2f%s : %d\n", ((totalPositive * 1.0) / tweets.size()) * 100, "%", totalPositive);
             System.out.printf("Very Positive - %.2f%s : %d\n", ((totalVeryPostive * 1.0) / tweets.size()) * 100, "%", totalVeryPostive);
+            System.out.printf("    Undefined - %.2f%s : %d\n", ((totalUndefined * 1.0) / tweets.size()) * 100, "%", totalUndefined);
         }
     }
 

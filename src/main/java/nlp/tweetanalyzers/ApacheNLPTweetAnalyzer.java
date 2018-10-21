@@ -47,7 +47,7 @@ public class ApacheNLPTweetAnalyzer implements OverallSentimentAnalyzer, Percent
             modelIn = new FileInputStream("OpenNLP_models/en-token.bin");
             tokenizermodel= new TokenizerModel(modelIn);
             tokenizer = new TokenizerME(tokenizermodel);
-            modelIn = new FileInputStream("/Users/benjaminmussell/IdeaProjects/Twitter-Data-Analyzer/OpenNLP_models/en-sent.bin");
+            modelIn = new FileInputStream("OpenNLP_models/en-sent.bin");
             sentenceModel = new SentenceModel(modelIn);
             sentenceDetectorME = new SentenceDetectorME(sentenceModel);
 

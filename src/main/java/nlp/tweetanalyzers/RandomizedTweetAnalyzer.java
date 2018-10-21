@@ -10,13 +10,18 @@ import java.util.Random;
 
 public class RandomizedTweetAnalyzer implements OverallSentimentAnalyzer, PercentageSentimentAnalyzer {
 
-    Random random;
-
-    public RandomizedTweetAnalyzer(long seed){
-        random = new Random(seed);
+    private Random random;
+    private static RandomizedTweetAnalyzer randomizedTweetAnalyzer = null;
+    public static RandomizedTweetAnalyzer getInstance(long seed){
+        if(randomizedTweetAnalyzer == null)
+            randomizedTweetAnalyzer = new RandomizedTweetAnalyzer(seed);
+        return randomizedTweetAnalyzer;
     }
-    public RandomizedTweetAnalyzer(){
-        this(System.currentTimeMillis());
+    public static RandomizedTweetAnalyzer getInstance(){
+        return getInstance(System.currentTimeMillis());
+    }
+    private RandomizedTweetAnalyzer(long seed){
+        random = new Random(seed);
     }
 
     @Override

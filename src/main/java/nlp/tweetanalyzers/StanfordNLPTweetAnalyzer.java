@@ -4,6 +4,7 @@ import edu.stanford.nlp.pipeline.CoreDocument;
 import edu.stanford.nlp.pipeline.CoreSentence;
 import edu.stanford.nlp.pipeline.SentimentAnnotator;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import edu.stanford.nlp.util.logging.RedwoodConfiguration;
 import nlp.AnalyzedTweet;
 import nlp.SanitizedTweet;
 
@@ -18,17 +19,15 @@ public class StanfordNLPTweetAnalyzer implements OverallSentimentAnalyzer, Sente
 
     private StanfordCoreNLP pipeline;
     private Properties properties;
-
     private static StanfordNLPTweetAnalyzer stanfordNLPTweetAnalyzer = null;
 
     /**
      * Singleton design pattern
      * @return
      */
-    public static StanfordNLPTweetAnalyzer getInstance(){
-        System.out.println("get instance");
+    public static StanfordNLPTweetAnalyzer getInstance(boolean muteStanfordRedLogging){
         if(stanfordNLPTweetAnalyzer == null)
-            stanfordNLPTweetAnalyzer = new StanfordNLPTweetAnalyzer();
+            stanfordNLPTweetAnalyzer = new StanfordNLPTweetAnalyzer(muteStanfordRedLogging);
         return stanfordNLPTweetAnalyzer;
     }
 
@@ -36,7 +35,10 @@ public class StanfordNLPTweetAnalyzer implements OverallSentimentAnalyzer, Sente
      * Private Constructor that sets up the nlp pipeline. Uses the better model if the file exists,
      * otherwise uses the default model.
      */
-    private StanfordNLPTweetAnalyzer(){
+    private StanfordNLPTweetAnalyzer(boolean muteStanfordRedLogging){
+        if(muteStanfordRedLogging)
+            RedwoodConfiguration.current().clear().apply();
+
         properties = new Properties();
         properties.setProperty("annotators", "tokenize,ssplit,pos,parse, sentiment");
         properties.setProperty("ner.useSUTime", "false");
@@ -74,7 +76,6 @@ public class StanfordNLPTweetAnalyzer implements OverallSentimentAnalyzer, Sente
         analyzedTweet.setSentences(strSentences);
         analyzedTweet.setSentenceSentiments(sentenceSentiments);
         int overallSentiment = analyzeOverallTweetSentiment(analyzedTweet);
-        System.out.println(overallSentiment);
         analyzedTweet.setOverallSentiment(overallSentiment);
         analyzedTweet.setAnalysisAuthorClassName(getAnalyzerClassName());
         return analyzedTweet;

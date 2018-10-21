@@ -1,5 +1,6 @@
 package nlp;
 
+
 import java.io.*;
 import java.util.Scanner;
 
@@ -15,7 +16,8 @@ public class CSVCombiner {
     private static String[] appendFileNames;
     private static Scanner[] appendFileStreams;
 
-    public static void main(String args[]){
+    public static void main(String args[]) throws FileNotFoundException {
+
         Scanner kb = new Scanner(System.in);
         System.out.println("Enter file path of start file");
         String f1 = kb.nextLine();
@@ -49,6 +51,46 @@ public class CSVCombiner {
 
     }
 
+    /**
+     * Combines a sequence of csv files into one big csv file. uses the first line of the first csv as the head
+     * The remaining files the first line is ignored.
+     *
+     * 1.csv, 2.csv, 3.csv, ... n.csv -> outFile
+     *
+     * @param rootPath - the path to the directory that contains all the csv files
+     * @param startNumber - start # of the sequence, usually "1"
+     * @param endNumber - end # of sequence
+     * @param outFileName - the file you want to name the big file.
+     */
+    private static void combineCSVFilesWithSequenceName(String rootPath, int startNumber, int endNumber, String outFileName) throws FileNotFoundException {
+        Scanner[] combineStreams = new Scanner[endNumber - startNumber];
+
+        int nameIndex = startNumber;
+        for(int i = 0; i < combineStreams.length; i++){
+            String filename = rootPath + "\\" + nameIndex + ".csv";
+            System.out.println("reading :" + filename);
+            Scanner stream = new Scanner(new File(filename),ENCODING);
+
+            if(i != 0)//only keep first line for line 1
+                stream.nextLine();
+
+            combineStreams[i] = stream;
+            nameIndex++;
+        }
+
+
+        //write each stream to the output stream
+        PrintWriter pw = new PrintWriter(outFileName);
+        for(int i = 0; i < combineStreams.length; i++){
+            System.out.println("writing :" + i);
+            Scanner stream = combineStreams[i];
+            while (stream.hasNextLine() )
+                pw.println(stream.nextLine());
+            stream.close();
+            pw.flush();
+        }
+        pw.close();
+    }
     private static void combineCSVFiles(String f1,
                                         String[] appendFileNames,
                                         String[] appendFileFirstLines,
