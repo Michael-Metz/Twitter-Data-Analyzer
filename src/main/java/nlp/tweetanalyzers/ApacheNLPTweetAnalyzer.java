@@ -22,32 +22,32 @@ public class ApacheNLPTweetAnalyzer implements OverallSentimentAnalyzer, Percent
     private Tokenizer tokenizer;
     private SentenceModel sentenceModel;
     private SentenceDetectorME sentenceDetectorME;
+    private String pathToModels;
 
     /**
      * Singleton design pattern
      * @return
      */
-    public static ApacheNLPTweetAnalyzer getInstance(){
+    public static ApacheNLPTweetAnalyzer getInstance(String pathToModels){
         if(apacheNLPTweetAnalyzer == null)
-            apacheNLPTweetAnalyzer = new ApacheNLPTweetAnalyzer();
+            apacheNLPTweetAnalyzer = new ApacheNLPTweetAnalyzer(pathToModels);
         return apacheNLPTweetAnalyzer;
     }
 
     /**
      * Private constructor called by the getInstance.
      */
-    private ApacheNLPTweetAnalyzer() {
-        //do any nlp library set up here
-        //read in the bin model
-        //
+    private ApacheNLPTweetAnalyzer(String pathToModels) {
+        this.pathToModels = pathToModels;
+
         try {
-            InputStream modelIn = new FileInputStream("OpenNLP_models/TrainingOutput.bin");
+            InputStream modelIn = new FileInputStream(this.pathToModels + "TrainingOutput.bin");
             doccatmodel = new DoccatModel(modelIn);
             documentCategorizer= new DocumentCategorizerME(doccatmodel);
-            modelIn = new FileInputStream("OpenNLP_models/en-token.bin");
+            modelIn = new FileInputStream(this.pathToModels + "en-token.bin");
             tokenizermodel= new TokenizerModel(modelIn);
             tokenizer = new TokenizerME(tokenizermodel);
-            modelIn = new FileInputStream("OpenNLP_models/en-sent.bin");
+            modelIn = new FileInputStream(this.pathToModels + "en-sent.bin");
             sentenceModel = new SentenceModel(modelIn);
             sentenceDetectorME = new SentenceDetectorME(sentenceModel);
 

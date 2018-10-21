@@ -89,11 +89,11 @@ public class TweetAnalyzerDriver {
             choice = CLIUtil.displayMenu(menuTwo);
             switch (choice) {
                 case 0:
-                    stanfordNlpAnalyzer = StanfordNLPTweetAnalyzer.getInstance(false);
+                    stanfordNlpAnalyzer = StanfordNLPTweetAnalyzer.getInstance("models/stanford",false);
                     analyzedTweets = stanfordNlpAnalyzer.analyzeSanitizedTweetsSentiment(sanitizedTweets);
                     break;
                 case 1:
-                    apacheNlpAnalyzer = ApacheNLPTweetAnalyzer.getInstance();
+                    apacheNlpAnalyzer = ApacheNLPTweetAnalyzer.getInstance("models/apache");
                     analyzedTweets = apacheNlpAnalyzer.analyzeSanitizedTweetsSentiment(sanitizedTweets);
                     break;
                 case 2:
@@ -201,7 +201,7 @@ public class TweetAnalyzerDriver {
                     }
                     break;
                 case 4:
-                    apacheNlpAnalyzer = ApacheNLPTweetAnalyzer.getInstance();
+                    apacheNlpAnalyzer = ApacheNLPTweetAnalyzer.getInstance("models/apache");
 
                     List<AnalyzedTweet> apacheAnalyzed = apacheNlpAnalyzer.analyzeSanitizedTweetsSentiment(analyzedTweets);
                     List<AnalyzedTweet> postive = new ArrayList<>();

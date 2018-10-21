@@ -19,15 +19,16 @@ public class StanfordNLPTweetAnalyzer implements OverallSentimentAnalyzer, Sente
 
     private StanfordCoreNLP pipeline;
     private Properties properties;
+    private String pathToModels;
     private static StanfordNLPTweetAnalyzer stanfordNLPTweetAnalyzer = null;
 
     /**
      * Singleton design pattern
      * @return
      */
-    public static StanfordNLPTweetAnalyzer getInstance(boolean muteStanfordRedLogging){
+    public static StanfordNLPTweetAnalyzer getInstance(String pathToModels, boolean muteStanfordRedLogging){
         if(stanfordNLPTweetAnalyzer == null)
-            stanfordNLPTweetAnalyzer = new StanfordNLPTweetAnalyzer(muteStanfordRedLogging);
+            stanfordNLPTweetAnalyzer = new StanfordNLPTweetAnalyzer(pathToModels,muteStanfordRedLogging);
         return stanfordNLPTweetAnalyzer;
     }
 
@@ -35,7 +36,8 @@ public class StanfordNLPTweetAnalyzer implements OverallSentimentAnalyzer, Sente
      * Private Constructor that sets up the nlp pipeline. Uses the better model if the file exists,
      * otherwise uses the default model.
      */
-    private StanfordNLPTweetAnalyzer(boolean muteStanfordRedLogging){
+    private StanfordNLPTweetAnalyzer(String pathToModels, boolean muteStanfordRedLogging){
+        this.pathToModels = pathToModels;
         if(muteStanfordRedLogging)
             RedwoodConfiguration.current().clear().apply();
 
@@ -44,8 +46,8 @@ public class StanfordNLPTweetAnalyzer implements OverallSentimentAnalyzer, Sente
         properties.setProperty("ner.useSUTime", "false");
         properties.put("threads", "12");
         boolean useDefaultModel = false;
-        String betterModel = "stanford-nlp-models/gate-EN-twitter.model";
-        File file = new File("stanford-nlp-models/gate-EN-twitter.model");
+        String betterModel = this.pathToModels + "gate-EN-twitter.model";
+        File file = new File(betterModel);
         if(file.exists() && !file.isDirectory())
             useDefaultModel = true;
         if(useDefaultModel)

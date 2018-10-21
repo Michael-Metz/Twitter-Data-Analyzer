@@ -11,7 +11,8 @@ import java.util.List;
 public class Cons {
 
     private static String OS_SLASH;//unix = "/", windows = "\\"
-
+    private static String APACHE_MODEL_ROOT_DIR;
+    private static String STANFORD_MODEL_ROOT_DIR;
     /**
      * This program will go into
      *
@@ -19,17 +20,19 @@ public class Cons {
      */
     public static void main(String args[]) {
 
-        if (args.length != 2) {
+        if (args.length != 4) {
             printUsage();
             System.exit(1);
         }
         File rootDirectory = new File(args[0]);
         OS_SLASH = args[1].equalsIgnoreCase("win") ? "\\" : "/";
+        STANFORD_MODEL_ROOT_DIR = args[2];
+        APACHE_MODEL_ROOT_DIR = args[3];
+
 
         TwitterPreProcessor preProcessor = new TwitterPreProcessor();
-        ApacheNLPTweetAnalyzer apache = ApacheNLPTweetAnalyzer.getInstance();
-        StanfordNLPTweetAnalyzer stanford = StanfordNLPTweetAnalyzer.getInstance(true);
-
+        StanfordNLPTweetAnalyzer stanford = StanfordNLPTweetAnalyzer.getInstance(STANFORD_MODEL_ROOT_DIR,true);
+        ApacheNLPTweetAnalyzer apache = ApacheNLPTweetAnalyzer.getInstance(APACHE_MODEL_ROOT_DIR);
 
         File[] twitterExportDirectories = rootDirectory.listFiles();
         for (int i = 0; i < twitterExportDirectories.length; i++) {
@@ -67,28 +70,15 @@ public class Cons {
             IOTweetHelper.writeAnalyzedTweetsToCSV(agreedAnalyzedTweets, "agreed" + i + ".csv");
             IOTweetHelper.writeAnalyzedTweetsToCSV(notAgreedAnalyzedTweets, "notagreed" + i + ".csv");
         }
-        //read in tweets as stanford
-
-        //
-
-        //have analyzed tweets
-        ArrayList<AnalyzedTweet> analyzedTweets = new ArrayList<>(10);
-        ApacheNLPTweetAnalyzer apacheNLPTweetAnalyzer = ApacheNLPTweetAnalyzer.getInstance();
-
-        //run against another analyzer
-        for (AnalyzedTweet analyzedTweet : analyzedTweets) {
-            AnalyzedTweet other = apacheNLPTweetAnalyzer.analyzeSanitizedTweetSentiment(analyzedTweet);
-            other.getOverallSentiment();
-        }
-
-        //output consensous
 
     }
 
     private static void printUsage() {
-        System.out.println("Usage: java PingServer root-dir os");
-        System.out.println("       root-dir - path to the root directory");
-        System.out.println("             os - what operating system your using, either \'unix\' or \'win\'");
+        System.out.println("Usage: java PingServer root-dir os stanford-model-dir apache-model-dir");
+        System.out.println("          root-dir - path to the root directory");
+        System.out.println("                os - what operating system your using, either \'unix\' or \'win\'");
+        System.out.println("  apache-model-dir - Path to dir of apache models");
+        System.out.println("stanford-model-dir - path to dir of stanford models");
     }
 
     public static void printFolderDirectoryHierarchy(File[] files, int indent) {
